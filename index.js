@@ -19,7 +19,7 @@ function readTemplate (callback, filepath) {
 }
 
 function parseXml (callback, source) {
-    var xmlParser = new xml2js.Parser();
+    var xmlParser = new xml2js.Parser({ preserveChildrenOrder: true });
     xmlParser.parseString(source, callback);
 }
 
