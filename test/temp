@@ -1,0 +1,66 @@
+'use strict';
+
+var React = require('react');
+var helpers = require('../helpers')(require('react-dom'));
+
+module.exports = React.createClass({
+
+    displayName: "Text",
+
+    getDefaultProps: function getDefaultProps() {
+        return {};
+    },
+    componentDidMount: function componentDidMount() {
+        helpers.applyXmlAttributes(this);
+    },
+    render: function render() {
+        var props = this.props;
+        var children = props.children;
+
+        return React.createElement(
+            'svg',
+            this.props,
+            React.createElement(
+                'svg',
+                null,
+                React.createElement(
+                    'title',
+                    null,
+                    'The Title'
+                ),
+                React.createElement(
+                    'text',
+                    { x: '20', y: '20' },
+                    'Some Text'
+                ),
+                React.createElement(
+                    'g',
+                    null,
+                    React.createElement(
+                        'title',
+                        { style: 'color: #aaa;' },
+                        'The Title'
+                    ),
+                    React.createElement(
+                        'text',
+                        { x: '20', y: '20' },
+                        'Some Text'
+                    )
+                ),
+                React.createElement(
+                    'title',
+                    null,
+                    'The Title'
+                ),
+                React.createElement(
+                    'text',
+                    { x: '20', y: '20' },
+                    'Some Text'
+                )
+            ),
+            React.Children.map(children, function (c) {
+                return c;
+            })
+        );
+    }
+});
