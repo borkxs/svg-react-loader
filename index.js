@@ -22,16 +22,6 @@ function readTemplate (callback, filepath) {
 }
 
 function parseXml (callback, source) {
-
-    // var xmlParser = new xml2js.Parser({
-    //     explicitArray: true,
-    //     explicitChildren: true,
-    //     preserveChildrenOrder: true
-    // });
-    // xmlParser.parseString(source, callback);
-
-    // console.log("source", source)
-
     callback(null,
         libxmljs.parseXml(source)
     )
@@ -47,7 +37,7 @@ function renderJsx (opts, callback, error, xml) {
     var tagName = xml.root().name()
     // var root    = xml.roo;
 
-    console.log("tagName", tagName)
+    // console.log("tagName", tagName)
 
     // if (opts.tag) {
     //     root = xml[opts.tag] = root;
