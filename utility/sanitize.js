@@ -59,7 +59,7 @@ function sanitizeStyleNodes (node) {
 
     var text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
 
-    console.log("src", src)
+    // console.log("src", src)
     try {
         node.text(text)
     } catch (e) {}
@@ -93,7 +93,7 @@ module.exports = function sanitize (xmlNode, namespaces) {
         }
     }
 
-    console.log(xmlNode.name())
+    // console.log(xmlNode.name())
 
     // libxmljs seems to skip this in childNodes()
     // if (xmlNode.type() === "comment") {
