@@ -59,7 +59,7 @@ describe('svg-react-loader', function () {
         });
     });
 
-    it.only('should handle styles', function (done) {
+    it('should handle styles', function (done) {
         var filename = './svg/styles.svg';
 
         invoke(read(filename), {

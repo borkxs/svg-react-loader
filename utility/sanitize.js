@@ -25,6 +25,22 @@ var RESERVED_KEYS = {
     'for': 'htmlFor'
 };
 
+function appendToDataAttribute (xmlNode, key, value, namespaces, nsKey) {
+    var dataAttr = xmlNode.attr(DATA_ATTR_KEY)
+    var data = (dataAttr && dataAttr.value()) || []
+
+    var ns = namespaces && namespaces[nsKey]
+    data.push([ns, key, value])
+
+    if (!dataAttr) {
+        xmlNode.attr({
+            [DATA_ATTR_KEY]: data
+        })
+    } else {
+        xmlNode.attr(DATA_ATTR_KEY).value(data)
+    }
+}
+
 /**
  * @param {Object[]} nodes
  */
@@ -149,12 +165,13 @@ module.exports = function sanitize (xmlNode, namespaces) {
     var style = xmlNode.attr("style")
     if (style) {
         sanitizeStyleNodes(style);
+        appendToDataAttribute(xmlNode, "style", xmlNode.text())
+        style.remove();
     }
 
     if (xmlNode.name() === "style") {
         sanitizeStyleNodes(xmlNode);
     }
-
 
     // Serialize our data attribute
     if (xmlNode.attr(DATA_ATTR_KEY) && xmlNode.attr(DATA_ATTR_KEY).value()) {
