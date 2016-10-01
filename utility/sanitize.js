@@ -28,24 +28,29 @@ var RESERVED_KEYS = {
 /**
  * @param {Object[]} nodes
  */
-function sanitizeStyleNodes (nodes) {
+function sanitizeStyleNodes (node) {
 
-    console.log("nodes", nodes.name())
+    // var acc = node.value || node.text
+    // var src = acc.call(node)
 
+    var src
+    try {
+        src = node.text()
+    } catch (e) {}
+    try {
+        src = node.value()
+    } catch (e) {}
 
-    // nodes.
-    //     forEach(function (node, idx, context) {
-    // var isText = typeof node === 'string';
-    // var src = isText ? node : node[XML_TEXT_NODE_KEY];
-    // var text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
+    var text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
 
-    // if (isText) {
-    //     context[idx] = text;
-    // }
-    // else {
-    //     node[XML_TEXT_NODE_KEY] = text;
-    // }
-        // });
+    console.log("src", src)
+    try {
+        node.text(text)
+    } catch (e) {}
+    try {
+        node.value(text)
+    } catch (e) {}
+
 }
 
 /**
@@ -146,12 +151,17 @@ module.exports = function sanitize (xmlNode, namespaces) {
         sanitizeStyleNodes(style);
     }
 
+    if (xmlNode.name() === "style") {
+        sanitizeStyleNodes(xmlNode);
+    }
+
+
     // Serialize our data attribute
-    // if (xmlNode.attr(DATA_ATTR_KEY) && xmlNode.attr(DATA_ATTR_KEY).value()) {
-    //     xmlNode.attr(DATA_ATTR_KEY).value(
-    //         JSON.stringify(xmlNode.attr(DATA_ATTR_KEY).value())
-    //     )
-    // }
+    if (xmlNode.attr(DATA_ATTR_KEY) && xmlNode.attr(DATA_ATTR_KEY).value()) {
+        xmlNode.attr(DATA_ATTR_KEY).value(
+            JSON.stringify(xmlNode.attr(DATA_ATTR_KEY).value())
+        )
+    }
 
     return xmlNode;
 };

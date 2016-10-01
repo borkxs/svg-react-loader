@@ -56,15 +56,19 @@ function renderJsx (opts, callback, error, xml) {
     //     props = root.$ = {};
     // }
 
-    // var props = assign(sanitize(root).$ || {}, opts.attrs);
-
     sanitize(xml.root())
+
+    // var props = assign(sanitize(xml.root()).$ || {}, opts.attrs);
+    var props = Object.assign(xml.root().attrs().reduce(function (acc, attr) {
+        acc[attr.name()] = attr.value()
+        return acc
+    }, {}), opts.attrs)
 
     // var xmlBuilder = new xml2js.Builder({
     //     headless: true
     // });
 
-    var xmlSrc = xml.toString();
+    var xmlSrc = xml.root().childNodes().map(node => node.toString()).join("\n")
 
     // console.log("xmlSrc", xmlSrc)
 
@@ -72,11 +76,10 @@ function renderJsx (opts, callback, error, xml) {
         reactDom:      opts.reactDom,
         tagName:       opts.tagName || tagName,
         displayName:   opts.displayName,
-        defaultProps:  {},
-        // defaultProps:  props,
+        defaultProps:  props,
         innerXml:      xmlSrc
-                         .split(/\n/).slice(1, -1).join('\n')
-                         .replace(/xmlns.*?\=.*?".*?"/g, "") // TODO
+                         // .split(/\n/).slice(1, -1).join('\n')
+                         .replace(/\ xmlns.*?\=.*?".*?"/g, "") // TODO
                          .replace(/\<\!\-\-.*\-\-\>/g, "") // TODO
                          .replace(/\<\!DOCTYPE.*\>/g, "") // TODO
     });
