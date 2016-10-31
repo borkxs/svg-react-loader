@@ -24,7 +24,31 @@ function readTemplate (callback, filepath) {
 function parseXml (callback, source) {
     callback(null,
         libxmljs.parseXml(source)
-    )
+    );
+}
+
+function serialize(node) {
+    const children = node.childNodes().length
+        ? node.childNodes().map(serialize)
+        : `"${node.text()}"`
+
+    var name = `"${node.name()}"`
+
+    var props = node.attrs().length ? `{${node.attrs().reduce((str, attr) =>
+    {
+        return str + (
+            !attr.name ? ""
+            : `"${ attr.name() }": ${ attr.value() },`
+        )
+    }, "")}}` : "null"
+
+    if ((node.type() === "text")
+        && (node.name() === "text")
+        && (node.attrs().length === 0)) {
+        return children
+    }
+
+    return `React.createElement(${[name, props, children || "null"].join(",")})`
 }
 
 function renderJsx (opts, callback, error, xml) {
@@ -34,7 +58,8 @@ function renderJsx (opts, callback, error, xml) {
 
     // console.log("xml", xml.toString())
 
-    var tagName = xml.root().name()
+    var tagName = xml.root().name();
+
     // var root    = xml.roo;
 
     // console.log("tagName", tagName)
@@ -46,21 +71,25 @@ function renderJsx (opts, callback, error, xml) {
     //     props = root.$ = {};
     // }
 
-    sanitize(xml.root())
+    sanitize(xml.root());
 
     // var props = assign(sanitize(xml.root()).$ || {}, opts.attrs);
     var props = Object.assign(xml.root().attrs().reduce(function (acc, attr) {
-        acc[attr.name()] = attr.value()
-        return acc
-    }, {}), opts.attrs)
+        acc[attr.name()] = attr.value();
+        return acc;
+    }, {}), opts.attrs);
 
     // var xmlBuilder = new xml2js.Builder({
     //     headless: true
     // });
 
-    var xmlSrc = xml.root().childNodes().map(node => node.toString()).join("\n")
+    console.log(
+        serialize(xml.root())
+    )
 
-    // console.log("xmlSrc", xmlSrc)
+    var xmlSrc = xml.root().childNodes().map(node =>node.toString()).join("\n");
+
+    console.log("xmlSrc", xmlSrc)
 
     var component = opts.tmpl({
         reactDom:      opts.reactDom,
