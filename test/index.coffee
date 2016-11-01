@@ -84,13 +84,13 @@ describe "svg-react-loader", ->
         callback: (error, result) ->
           throw error if error
 
-          contents = babel.transform(result, {
-            presets: ["es2015", "react"]
-          }).code
+          # contents = babel.transform(result, {
+          #   presets: ["es2015", "react"]
+          # }).code
 
           # i wonder if there's a more direct way to do this
-          outPath = path.join(__dirname, "react2", path.parse(filename).name + ".js")
-          fs.writeFileSync outPath, contents, "utf8"
+          outPath = path.join(__dirname, "react", path.parse(filename).name + ".js")
+          fs.writeFileSync outPath, result, "utf8"
           out = require(outPath)
           # fs.unlink outPath
 

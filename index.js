@@ -38,7 +38,7 @@ function serialize(node) {
     {
         return str + (
             !attr.name ? ""
-            : `"${ attr.name() }": ${ attr.value() },`
+            : `"${ attr.name() }": "${ attr.value() }",`
         )
     }, "")}}` : "null"
 
@@ -87,14 +87,14 @@ function renderJsx (opts, callback, error, xml) {
         serialize(xml.root())
     )
 
-    var xmlSrc = xml.root().childNodes().map(node =>node.toString()).join("\n");
+    // var xmlSrc = xml.root().childNodes().map(node =>node.toString()).join("\n");
+    var xmlSrc = serialize(xml.root())
 
     // console.log("xmlSrc", xmlSrc)
     // console.log("props", opts.attrs, props)
     // console.log("props", opts.attrs)
-
-    var xmlBuilder = new xml2js.Builder({ headless: true });
-    var xmlSrc = xmlBuilder.buildObject(xml);
+    // var xmlBuilder = new xml2js.Builder({ headless: true });
+    // var xmlSrc = xmlBuilder.buildObject(xml);
 
     var component = opts.tmpl({
         reactDom:      opts.reactDom,
@@ -103,9 +103,9 @@ function renderJsx (opts, callback, error, xml) {
         defaultProps:  props,
         innerXml:      xmlSrc
                          // .split(/\n/).slice(1, -1).join('\n')
-                         .replace(/\ xmlns.*?\=.*?".*?"/g, "") // TODO
-                         .replace(/\<\!\-\-.*\-\-\>/g, "") // TODO
-                         .replace(/\<\!DOCTYPE.*\>/g, "") // TODO
+                         // .replace(/\ xmlns.*?\=.*?".*?"/g, "") // TODO
+                         // .replace(/\<\!\-\-.*\-\-\>/g, "") // TODO
+                         // .replace(/\<\!DOCTYPE.*\>/g, "") // TODO
     });
 
     callback(null, component);

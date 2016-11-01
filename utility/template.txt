@@ -1,5 +1,5 @@
 var React = require('react');
-var helpers = require('../../helpers')(require('<%= reactDom %>'));
+var helpers = require('svg-react-loader/helpers')(require('<%= reactDom %>'));
 
 module.exports = React.createClass({
 
@@ -18,10 +18,10 @@ module.exports = React.createClass({
         var children = props.children;
 
         return (
-            <<%= tagName %> {...this.props}>
-                <%= innerXml %>
-                {React.Children.map(children, (c) => (c))}
-            </<%= tagName %>>
+            React.createElement("<%= tagName %>", this.props,
+                <%= innerXml %>,
+                React.Children.map(children, (c) => (c))
+            )
         );
     }
 });
