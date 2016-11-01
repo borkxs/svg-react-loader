@@ -37,11 +37,7 @@ function serialize(node) {
     var propStr = ""
 
     var dataArr = node["data-svgreactloader"]
-    if (dataArr) {
-        propStr = dataArr.reduce((str, item) => {
-            return str + `"${item[1]}": \`${item[2]}\`` + ","
-        }, propStr)
-    }
+    propStr = `"data-svgreactloader": ${JSON.stringify(dataArr)}`
 
     var props = node.attrs().length ? `{${node.attrs().reduce((str, attr) =>
     {
