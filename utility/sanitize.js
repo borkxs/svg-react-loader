@@ -26,25 +26,24 @@ var RESERVED_KEYS = {
 };
 
 function appendToDataAttribute (xmlNode, key, value, namespaces, nsKey) {
-    var dataAttr = xmlNode.attr(DATA_ATTR_KEY)
-    var data = (dataAttr && dataAttr.value()) || []
+    // var dataAttr = xmlNode.attr(DATA_ATTR_KEY)
+    var data = xmlNode[DATA_ATTR_KEY] || []
+    // var data = (dataAttr && dataAttr.value()) || []
 
     var ns = namespaces && namespaces[nsKey]
     data.push([ns, key, value])
 
     // console.log("data", data)
-
-    if (!dataAttr) {
-        xmlNode.attr({
-            [DATA_ATTR_KEY]: data
-        })
-    } else {
-        xmlNode.attr(DATA_ATTR_KEY).value(data)
-    }
+    xmlNode[DATA_ATTR_KEY] = data
+    // if (!dataAttr) {
+    // } else {
+    //     xmlNode[DATA_ATTR_KEY] = data
+    //     // xmlNode.attr(DATA_ATTR_KEY).value(data)
+    // }
 }
 
 function sanitizeStyle (src) {
-    return text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
+    return src.replace(TEXT_REGEX, "\\$1");
 }
 
 /**
@@ -172,10 +171,7 @@ module.exports = function sanitize (xmlNode, namespaces) {
 
     var style = xmlNode.attr("style")
     if (style) {
-        // sanitizeStyleNodes(style);
-        var x = sanitizeStyle(style.value())
-        // console.log("x", x)
-        appendToDataAttribute(xmlNode, "style", x)
+        appendToDataAttribute(xmlNode, "style", sanitizeStyle(style.value()))
         style.remove();
     }
 
