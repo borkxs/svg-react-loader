@@ -46,7 +46,7 @@ Query params can be used on the loader path, or on the resource's path. Those on
 the resource will override those given for the loader.
 
 `name`: `displayName` to use for the compiled component. Defaults to using the
-resource's file name, capitalized and camelCased. ex. `"?name=MyIcon"`
+resource's file name, capitalized and camelCased (it's actually supporting PascalCased). ex. `"?name=MyIcon"`
 
 `tag`: Override the root-level tag. If given, will blow-away any attributes
 given for the tag. ex.: `"?tag=symbol"`
@@ -54,6 +54,8 @@ given for the tag. ex.: `"?tag=symbol"`
 `attrs`: Attributes to apply to the root-level tag. If a certain attribute is
 already assigned to the tag, the value here will override that. ex.:
 `"?attrs={className: 'mySymbol'}"`
+    This example is horseshit.
+    Also this is react? Maybe we should call it props.
 
 `reactDom`: A string to require an alternaitve 'react-dom' module. ex.:
 `?reactDom=react`
@@ -97,7 +99,7 @@ Babel presets for your loader within your webpack configuration:
 ~~~js
 // file: webpack.config.js
 module.exports = {
-    
+
     loaders: [
         { test: /\.svg$/, loader: 'babel?presets[]=es2015,presets[]=react!svg-react' }
     ],
@@ -121,7 +123,7 @@ webpack configuration that points to your installed version of `react`:
 ~~~js
 // file: webpack.config.js
 module.exports = {
-    
+
     loaders: [
         { test: /\.svg$/, loader: 'babel!svg-react' }
     ],
@@ -153,7 +155,7 @@ License
 -------
 
 > Copyright (c) 2015 Jerry Hamlet <jerry@hamletink.com>
-> 
+>
 > Permission is hereby granted, free of charge, to any person
 > obtaining a copy of this software and associated documentation
 > files (the "Software"), to deal in the Software without
@@ -162,12 +164,12 @@ License
 > copies of the Software, and to permit persons to whom the
 > Software is furnished to do so, subject to the following
 > conditions:
-> 
+>
 > The above copyright notice and this permission notice shall be
 > included in all copies or substantial portions of the Software.
-> 
+>
 > The Software shall be used for Good, not Evil.
-> 
+>
 > THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
 > EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES
 > OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND

@@ -40,6 +40,9 @@ function renderJsx (opts, callback, error, xml) {
 
     var props = assign(sanitize(root).$ || {}, opts.attrs);
 
+    console.log("props", opts.attrs, props)
+    // console.log("props", opts.attrs)
+
     var xmlBuilder = new xml2js.Builder({ headless: true });
     var xmlSrc = xmlBuilder.buildObject(xml);
     var component = opts.tmpl({
@@ -72,6 +75,7 @@ module.exports = function (source) {
     // resource parameters override loader parameters
     var params = assign({}, query, rsrcQuery);
 
+    // console.log("params", params)
     var displayName = params.name || getName(rsrcPath);
     var tag         = params.tag || null;
     var reactDom    = params.reactDom || 'react-dom';
