@@ -4,12 +4,16 @@ var camelCase = require('lodash/camelCase');
 
 var XML_ATTR_KEY      = '$';
 var XML_TEXT_NODE_KEY = '_';
+var XML_CHILDREN_KEY  = '$$';
+var XML_NAME_KEY      = '#name';
+
 var NS_SEPARATOR      = ':';
 var DATA_ATTR_KEY     = 'data-svgreactloader';
 var XML_NAMESPACE_KEY = 'xmlns';
 var TEXT_REGEX        = /(["'])/g;
 
 var XML_NAMESPACES = {
+    xml: '!!!',
     svg: 'http://www.w3.org/2000/svg',
     xlink: 'http://www.w3.org/1999/xlink'
 };
@@ -21,23 +25,48 @@ var RESERVED_KEYS = {
     'for': 'htmlFor'
 };
 
+function appendToDataAttribute (xmlNode, key, value, namespaces, nsKey) {
+    var dataAttr = xmlNode.attr(DATA_ATTR_KEY)
+    var data = (dataAttr && dataAttr.value()) || []
+
+    var ns = namespaces && namespaces[nsKey]
+    data.push([ns, key, value])
+
+    if (!dataAttr) {
+        xmlNode.attr({
+            [DATA_ATTR_KEY]: data
+        })
+    } else {
+        xmlNode.attr(DATA_ATTR_KEY).value(data)
+    }
+}
+
 /**
  * @param {Object[]} nodes
  */
-function sanitizeStyleNodes (nodes) {
-    nodes.
-        forEach(function (node, idx, context) {
-            var isText = typeof node === 'string';
-            var src = isText ? node : node[XML_TEXT_NODE_KEY];
-            var text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
+function sanitizeStyleNodes (node) {
 
-            if (isText) {
-                context[idx] = text;
-            }
-            else {
-                node[XML_TEXT_NODE_KEY] = text;
-            }
-        });
+    // var acc = node.value || node.text
+    // var src = acc.call(node)
+
+    var src
+    try {
+        src = node.text()
+    } catch (e) {}
+    try {
+        src = node.value()
+    } catch (e) {}
+
+    var text = '{`' + src.replace(TEXT_REGEX, "\\$1") + '`}';
+
+    // console.log("src", src)
+    try {
+        node.text(text)
+    } catch (e) {}
+    try {
+        node.value(text)
+    } catch (e) {}
+
 }
 
 /**
@@ -51,65 +80,104 @@ function sanitizeStyleNodes (nodes) {
 module.exports = function sanitize (xmlNode, namespaces) {
     namespaces = namespaces || Object.create(XML_NAMESPACES);
 
-    if (Array.isArray(xmlNode)) {
-        xmlNode.
-        forEach(function (child) { sanitize(child, namespaces); });
+    if (xmlNode.childNodes().length) {
+        xmlNode.childNodes().forEach(child => {
+            sanitize(child, namespaces)
+        });
     }
-    else {
-        if (xmlNode[XML_ATTR_KEY]) {
-            xmlNode[XML_ATTR_KEY] =
-                keys(xmlNode[XML_ATTR_KEY]).
-                reduce(function (acc, key) {
-                    var i      = key.indexOf(NS_SEPARATOR);
-                    var hasSep = !!~i;
-                    var ns     = hasSep && key.slice(0, i);
-                    var attr   = hasSep ? key.slice(i + 1) : key;
-                    var value  = xmlNode[XML_ATTR_KEY][key];
-                    var nsKey  = hasSep ? ns : attr;
 
-                    if (nsKey === XML_NAMESPACE_KEY && !hasSep) {
-                        namespaces.xml = value;
-                    }
-                    else if (nsKey === XML_NAMESPACE_KEY) {
-                        namespaces[attr] = value;
-                    }
-
-                    nsKey = nsKey === XML_NAMESPACE_KEY ? 'xml' : nsKey;
-
-                    if (ns && attr || attr === STYLE_ATTR_KEY) {
-                        acc[DATA_ATTR_KEY] = acc[DATA_ATTR_KEY] || [];
-                        acc[DATA_ATTR_KEY].push([namespaces[nsKey], attr, value]);
-                    }
-                    else {
-                        acc[RESERVED_KEYS[key] || camelCase(key)] = value;
-                    }
-
-                    return acc;
-                }, {});
-
+    // libxmljs seems to treat all whitespace as empty text nodes
+    if (xmlNode.type() === "text") {
+        if (!xmlNode.text().trim() && !xmlNode.childNodes().length) {
+            return xmlNode.remove()
         }
+    }
 
-        // Process the children of this node
-        keys(omit(xmlNode, [XML_ATTR_KEY, XML_TEXT_NODE_KEY])).
-            forEach(function (key) {
-                var node = xmlNode[key];
+    // console.log(xmlNode.name())
 
-                if (typeof node === 'string') {
-                    return;
-                }
-                else if (key === 'style') {
-                    sanitizeStyleNodes(node);
-                }
-                else {
-                    sanitize(node, namespaces);
-                }
-            });
+    // libxmljs seems to skip this in childNodes()
+    // if (xmlNode.type() === "comment") {
+    //     return xmlNode.remove()
+    // }
 
-        // Serialize our data attribute
-        if (xmlNode[XML_ATTR_KEY] && xmlNode[XML_ATTR_KEY][DATA_ATTR_KEY]) {
-            xmlNode[XML_ATTR_KEY][DATA_ATTR_KEY] =
-                JSON.stringify(xmlNode[XML_ATTR_KEY][DATA_ATTR_KEY]);
-        }
+    // xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlBase xmlLang xmlSpace
+
+    // process this node attributes
+    if (xmlNode.attrs().length) {
+        xmlNode.attrs().forEach(function (attrNode) {
+
+            var value = attrNode.value()
+            var key = attrNode.name()
+            var ns = attrNode.namespace()
+
+            if (ns) {
+                var prefix = ns.prefix()
+                var href = ns.href()
+                // console.log("\t", key, value, prefix, href)
+                if (XML_NAMESPACES[prefix]) {
+                    attrNode.remove()
+                    xmlNode.attr({
+                        [camelCase(`${prefix}-${key}`)]: value
+                    })
+                }
+
+                var nsKey = ns.prefix()
+
+                if (nsKey === XML_NAMESPACE_KEY) {
+                    namespaces.xml = value;
+                }
+                else if (nsKey === XML_NAMESPACE_KEY) {
+                    namespaces[key] = value;
+                }
+            } else {
+                var keyName = RESERVED_KEYS[key] || camelCase(key);
+                attrNode.remove()
+                xmlNode.attr({ [keyName]: value })
+                // console.log("\t", keyName, value.substr(0, 8))
+            }
+
+            // nsKey = nsKey === XML_NAMESPACE_KEY ? 'xml' : nsKey;
+
+            // if (ns && attr || attr === STYLE_ATTR_KEY) {
+
+            //     var dataAttr = xmlNode.attr(DATA_ATTR_KEY)
+            //     var data = (dataAttr && dataAttr.value()) || []
+
+            //     data.push([namespaces[nsKey], key, value])
+
+            //     if (!dataAttr) {
+            //         xmlNode.attr({
+            //             [DATA_ATTR_KEY]: data
+            //         })
+            //     } else {
+            //         xmlNode.attr(DATA_ATTR_KEY).value(data)
+            //     }
+
+            //     attrNode.remove()
+            // }
+            // else {
+            //     var keyName = RESERVED_KEYS[key] || camelCase(key);
+            //     xmlNode.attr({ [keyName]: value })
+            // }
+        })
+    }
+
+    var style = xmlNode.attr("style")
+    if (style) {
+        sanitizeStyleNodes(style);
+        appendToDataAttribute(xmlNode, "style", xmlNode.text())
+        style.remove();
+    }
+
+    if (xmlNode.name() === "style") {
+        sanitizeStyleNodes(xmlNode);
+    }
+
+    // Serialize our data attribute
+    if (xmlNode.attr(DATA_ATTR_KEY) && xmlNode.attr(DATA_ATTR_KEY).value()) {
+        xmlNode.attr(DATA_ATTR_KEY).value(
+            JSON.stringify(xmlNode.attr(DATA_ATTR_KEY).value())
+        )
     }
 
     return xmlNode;

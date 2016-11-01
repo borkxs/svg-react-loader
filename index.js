@@ -3,7 +3,10 @@ var fs       = require('fs');
 var lutils   = require('loader-utils');
 var sanitize = require('./utility/sanitize');
 var getName  = require('./utility/get-name');
-var xml2js   = require('xml2js');
+// var xml2js   = require('xml2js');
+
+var libxmljs = require('libxmljs');
+
 var template = require('lodash/template');
 var assign   = require('lodash/assign');
 var keys     = require('lodash/keys');
@@ -19,8 +22,33 @@ function readTemplate (callback, filepath) {
 }
 
 function parseXml (callback, source) {
-    var xmlParser = new xml2js.Parser();
-    xmlParser.parseString(source, callback);
+    callback(null,
+        libxmljs.parseXml(source)
+    );
+}
+
+function serialize(node) {
+    const children = node.childNodes().length
+        ? node.childNodes().map(serialize)
+        : `"${node.text()}"`
+
+    var name = `"${node.name()}"`
+
+    var props = node.attrs().length ? `{${node.attrs().reduce((str, attr) =>
+    {
+        return str + (
+            !attr.name ? ""
+            : `"${ attr.name() }": ${ attr.value() },`
+        )
+    }, "")}}` : "null"
+
+    if ((node.type() === "text")
+        && (node.name() === "text")
+        && (node.attrs().length === 0)) {
+        return children
+    }
+
+    return `React.createElement(${[name, props, children || "null"].join(",")})`
 }
 
 function renderJsx (opts, callback, error, xml) {
@@ -28,29 +56,56 @@ function renderJsx (opts, callback, error, xml) {
         return callback(error);
     }
 
-    var tagName = keys(xml)[0];
-    var root    = xml[tagName];
+    // console.log("xml", xml.toString())
 
-    if (opts.tag) {
-        root = xml[opts.tag] = root;
-        delete xml[tagName];
-        tagName = opts.tag;
-        props = root.$ = {};
-    }
+    var tagName = xml.root().name();
 
-    var props = assign(sanitize(root).$ || {}, opts.attrs);
+    // var root    = xml.roo;
 
-    console.log("props", opts.attrs, props)
+    // console.log("tagName", tagName)
+
+    // if (opts.tag) {
+    //     root = xml[opts.tag] = root;
+    //     delete xml[tagName];
+    //     tagName = opts.tag;
+    //     props = root.$ = {};
+    // }
+
+    sanitize(xml.root());
+
+    // var props = assign(sanitize(xml.root()).$ || {}, opts.attrs);
+    var props = Object.assign(xml.root().attrs().reduce(function (acc, attr) {
+        acc[attr.name()] = attr.value();
+        return acc;
+    }, {}), opts.attrs);
+
+    // var xmlBuilder = new xml2js.Builder({
+    //     headless: true
+    // });
+
+    console.log(
+        serialize(xml.root())
+    )
+
+    var xmlSrc = xml.root().childNodes().map(node =>node.toString()).join("\n");
+
+    // console.log("xmlSrc", xmlSrc)
+    // console.log("props", opts.attrs, props)
     // console.log("props", opts.attrs)
 
     var xmlBuilder = new xml2js.Builder({ headless: true });
     var xmlSrc = xmlBuilder.buildObject(xml);
+
     var component = opts.tmpl({
         reactDom:      opts.reactDom,
         tagName:       opts.tagName || tagName,
         displayName:   opts.displayName,
         defaultProps:  props,
-        innerXml:      xmlSrc.split(/\n/).slice(1, -1).join('\n')
+        innerXml:      xmlSrc
+                         // .split(/\n/).slice(1, -1).join('\n')
+                         .replace(/\ xmlns.*?\=.*?".*?"/g, "") // TODO
+                         .replace(/\<\!\-\-.*\-\-\>/g, "") // TODO
+                         .replace(/\<\!DOCTYPE.*\>/g, "") // TODO
     });
 
     callback(null, component);

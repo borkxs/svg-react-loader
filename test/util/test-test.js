@@ -1,5 +1,6 @@
 /*globals describe, it*/
 var react  = require('react');
+var dom  = require('react-dom/server');
 var loader = require('../');
 var babel  = require('babel-core');
 var fs     = require('fs');
@@ -66,19 +67,19 @@ describe('svg-react-loader', function () {
                 if (error) {
                     throw error;
                 }
-
+                console.log("result", result)
                 var src = babel.transform(result, {
                     presets: ['es2015', 'react']
                 }).code;
-                console.log(src);
+                // console.log(src);
                 fs.writeFileSync(__dirname + '/temp', src);
                 var el = react.createElement(require(__dirname + '/temp'));
-                var html = react.renderToStaticMarkup(el);
+                var html = dom.renderToStaticMarkup(el);
 
                 // var el = react.createElement('style');
-                // var html = react.renderToStaticMarkup(el);
+                // var html = dom.renderToStaticMarkup(el);
 
-                console.log(html);
+                // console.log(html);
                 fs.unlink(__dirname + '/temp');
                 done();
             },
@@ -101,10 +102,10 @@ describe('svg-react-loader', function () {
                 console.log(src);
                 fs.writeFileSync(__dirname + '/temp', src);
                 var el = react.createElement(require(__dirname + '/temp'));
-                var html = react.renderToStaticMarkup(el);
+                var html = dom.renderToStaticMarkup(el);
 
                 // var el = react.createElement('style');
-                // var html = react.renderToStaticMarkup(el);
+                // var html = dom.renderToStaticMarkup(el);
 
                 console.log(html);
                 fs.unlink(__dirname + '/temp');
