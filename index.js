@@ -30,12 +30,13 @@ function parseXml (callback, source) {
 function serialize(node) {
     const children = node.childNodes().length
         ? node.childNodes().map(serialize)
-        : `"${node.text()}"`
+        : `\`${node.text()}\``
 
     var name = `"${node.name()}"`
 
     var props = node.attrs().length ? `{${node.attrs().reduce((str, attr) =>
     {
+        // console.log(attr.name && attr.name(), attr.value && attr.value())
         return str + (
             !attr.name ? ""
             : `"${ attr.name() }": "${ attr.value() }",`
